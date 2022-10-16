@@ -2,6 +2,7 @@ import os
 import re
 import random
 import shelve
+
 from copypasta import copypastas 
 from googletrans import Translator
 import bs4
@@ -275,10 +276,15 @@ def getlocal(message):
     req = re.compile(r'/@(-)?(\d){1,3}\.(\d){1,7}\,(-)?(\d){1,3}\.(\d){1,7}')
     ma = req.search(rest)
     req2 = re.compile(r',')
-    ba = ma[0].strip('/@') # Який ще None, коли це працює?
-    fa = req2.sub(' ', f'{ba}')
-    coordinates = fa.split(' ')
-    bot.send_location(message.chat.id, coordinates[0], coordinates[1]) # str отримувається з coordinates
+    
+    try:
+        ba = ma[0].strip('/@') # Який ще None, коли це працює?
+        fa = req2.sub(' ', f'{ba}')
+        coordinates = fa.split(' ')
+        bot.send_location(message.chat.id, coordinates[0], coordinates[1]) # str отримувається з coordinates
+    except TypeError:
+        bot.send_message(message.chat.id, 'ПРОБАЧ, але цього місця не знайдено у мене')
+    
 
 @bot.message_handler(commands=['translate'])
 def trnslate(message):
