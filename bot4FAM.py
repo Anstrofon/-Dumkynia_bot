@@ -2,6 +2,7 @@ import os
 import re
 import random
 import shelve
+from local import getto
 
 from copypasta import copypastas 
 from googletrans import Translator
@@ -12,6 +13,8 @@ import wikipedia
 from yt_dlp import YoutubeDL
 from pyowm import OWM
 from telebot import types
+
+from genMemes import memes
 
 bot = telebot.TeleBot('5672240426:AAEDnV3H5lWrYCkh6Ss7UNGblSQxefPt5vI')
 
@@ -271,20 +274,14 @@ def contact(message):
 @bot.message_handler(commands=['getlocal'])
 def getlocal(message):
     adress = message.text.split('/getlocal')[1:]
-    res = requests.get('http://www.google.com/maps/place/' + adress[0])
-    rest = res.text
-    req = re.compile(r'/@(-)?(\d){1,3}\.(\d){1,7}\,(-)?(\d){1,3}\.(\d){1,7}')
-    ma = req.search(rest)
-    req2 = re.compile(r',')
-    
     try:
-        ba = ma[0].strip('/@') # Який ще None, коли це працює?
-        fa = req2.sub(' ', f'{ba}')
-        coordinates = fa.split(' ')
-        bot.send_location(message.chat.id, coordinates[0], coordinates[1]) # str отримувається з coordinates
-    except TypeError:
-        bot.send_message(message.chat.id, 'ПРОБАЧ, але цього місця не знайдено у мене')
-    
+        coordinates = getto(addres= adress )
+        coordinates = coordinates.split(" ")
+        bot.send_location(message.chat.id, coordinates[0], coordinates[1])
+    except Exception as e:
+        bot.send_message(message.chat.id, f'{e}')
+        
+   
 
 @bot.message_handler(commands=['translate'])
 def trnslate(message):
@@ -336,27 +333,44 @@ def wiki(message):
         bot.send_message(message.chat.id, getwiki(value[0]))
 
 
-@bot.message_handler( content_types=['photo'])
-def oilpic(message):
+@bot.message_handler(content_types=["photo"])
+def pics(message):
     try:  
         if '/oilpic' in message.caption:
             bot.send_message(message.chat.id, 'Зараз буде обробка твоєї світлині у размазню')
-        fileID = message.photo[-1].file_id
-        file_info = bot.get_file(fileID)
-        downloaded_file = bot.download_file(file_info.file_path)
+            fileID = message.photo[-1].file_id
+            file_info = bot.get_file(fileID)
+            downloaded_file = bot.download_file(file_info.file_path)
 
-        with open("pic\\image.jpg", 'wb') as new_file:
-            new_file.write(downloaded_file)
-        print('yesss')
-        files = {'image': open("pic\\image.jpg", "rb")}
-        r = requests.post("https://face.bubble.ru/_api/face", files=files)
+            os.chdir("C:\\Users\\Anton Yamesow\\Documents\\Rainmeter\\Skins\\Droptop Folders\\CustomFolder1\\pythone ideas\\botik");
+            with open("pic\\image.jpg", 'wb') as new_file:
+                new_file.write(downloaded_file)
+            print('yesss')
+            files = {'image': open("pic\\image.jpg", "rb")}
+            r = requests.post("https://face.bubble.ru/_api/face", files=files)
 
-        with open('pic\\result.jpg', 'wb') as f:
-            f.write(r.content)
+            with open('pic\\result.jpg', 'wb') as f:
+                f.write(r.content)
 
-        fot = open('pic\\result.jpg', 'rb')
-        
-        bot.send_photo(message.chat.id, fot, 'ось що я зробило:')
+            fot = open('pic\\result.jpg', 'rb')
+            
+            bot.send_photo(message.chat.id, fot, 'ось що я зробило:')
+        elif '/meme' in message.caption:
+            bot.send_message(message.chat.id, 'Генерую мемас 😘')
+            fileID = message.photo[-1].file_id
+            file_info = bot.get_file(fileID)
+            downloaded_file = bot.download_file(file_info.file_path)
+
+            os.chdir("C:\\Users\\Anton Yamesow\\Documents\\Rainmeter\\Skins\\Droptop Folders\\CustomFolder1\\pythone ideas\\botik");
+            NAMEFILE = "imageforMeme.jpg"
+            with open("Memes\\imageforMeme.jpg", 'wb') as new_file:
+                new_file.write(downloaded_file)
+            
+            memes(NAMEFILE)
+            os.chdir("C:\\Users\\Anton Yamesow\\Documents\\Rainmeter\\Skins\\Droptop Folders\\CustomFolder1\\pythone ideas\\botik");
+            fot = open('Memes\\memed\\imageforMeme.jpg', 'rb')
+            
+            bot.send_photo(message.chat.id, fot)
     except TypeError:
         pass
 
@@ -396,5 +410,7 @@ def randforward(message):
 @bot.message_handler(commands=['copypasta'])
 def copypasta(message):
     bot.send_message(message.chat.id, random.choice(copypastas))
+
+
 
 bot.polling(none_stop=True)
